@@ -1,0 +1,72 @@
+# Instalar y cargar paquetes si no están instalados
+# install.packages(c("readxl", "openxlsx", "jsonlite", "hdf5r"))
+
+# Cargar librerías
+library(readxl)
+library(openxlsx)
+library(jsonlite)
+library(hdf5r)
+
+# Leer archivos CSV
+data_csv <- read.csv(file,                 # Nombre del archivo o ruta completa del archivo
+         header = TRUE,        # Leer el encabezado (TRUE) o no (FALSE)
+         sep = ",",            # Separador de los valores
+         quote = "\"",         # Caracter de citaciones
+         dec = ".",            # Punto decimal
+         fill = TRUE,          # Rellenar celdas vacías (TRUE) o no (FALSE)
+         comment.char = "",    # Carácter de los comentarios o cadenas vacías
+         encoding = "unknown", # Codificación del archivo # encoding = "UTF-8", me ha resuelto grandes dolores de cabeza
+         na.strings = c("-9999" , "Na" ), # Indicar como se identifican los NA, en caso de que lo sepa.
+         na.omit,              # Si quieero omitir los NA 
+         stringsAsFactos = TRUE # Si estoy seguro que los caracteres son factores
+         ...)                  # Argumentos adicionales
+
+# Por defecto punto y coma (;) como separador y coma (,) como separador decimal
+data_csv2 <- read.csv2(file, header = TRUE, sep = ";", quote = "\"", dec = ",",
+          fill = TRUE, comment.char = "", encoding = "unknown", ...)
+
+# Leer archivos Excel
+data_excel <- read_excel("archivo.xlsx")
+data_excel_openxlsx <- read.xlsx("archivo.xlsx")
+
+# Leer archivos de texto plano
+data_txt <- read.table("archivo.txt", header = TRUE, sep = "\t")
+
+# Leer archivos JSON
+data_json <- fromJSON("archivo.json")
+
+# Leer archivos HDF5
+data_hdf5 <- h5read("archivo.h5", "/dataset_name")
+
+
+# Lectura multiple de archivos CSV y almacenarlos en una lista
+
+list.dirs()          # Para listar directorios
+setwd(" ")           # en win usar \\, ejemplo "C:\\Users\\..")
+
+archivos_csv <- list.files(pattern = "\\.csv$")
+
+library(data.table)
+
+lista_datos <- sapply(archivos_csv, function(archivo) {
+  fread(archivo, header = TRUE)  # Uso fread para detección de "," y/o ";"
+}, simplify = FALSE)
+
+
+# Lectura de csv desde un zip
+
+leer_csv_desde_zip <- function(url_zip, nombre_csv) {
+  directorio_temporal <- tempdir()
+  archivo_zip_local <- file.path(directorio_temporal, "archivo.zip")
+  download.file(url_zip, archivo_zip_local, mode = "wb")
+  unzip(archivo_zip_local, exdir = directorio_temporal)
+  archivo_csv_local <- file.path(directorio_temporal, nombre_csv)
+  datos <- fread(archivo_csv_local)
+  return(datos)
+}
+
+# Uso de la función - ejemplo
+url_zip <- "https://www.stats.govt.nz/assets/Uploads/Business-employment-data/Business-employment-data-September-2023-quarter/Download-data/business-employment-data-september-2023-quarter.zip"
+nombre_csv <- "machine-readable-business-employment-data-sep-2023-quarter.csv"
+datos <- leer_csv_desde_zip(url_zip, nombre_csv)
+str(datos)
